@@ -1,0 +1,13 @@
+service: sls-big-mouth
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+
+functions:
+  get-index:
+    handler: function/get-index.handler
+    events:
+      - http:
+          path: /
+          method: get
