@@ -1,8 +1,18 @@
 service: sls-big-mouth
 
+plugins:
+  - serverless-pseudo-parameters
+
 provider:
   name: aws
   runtime: nodejs10.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action: dynamodb:scan
+      Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/restaurants
+    - Effect: Allow
+      Action: execute-api:Invoke
+      Resource: arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
 
 functions:
   get-index:
@@ -11,3 +21,30 @@ functions:
       - http:
           path: /
           method: get
+    environment:
+      restaurants_api: https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/restaurants
+  get-restaurants:
+    handler: function/get-restaurants.handler
+    events:
+      - http:
+          path: /restaurants/
+          method: get
+          authorizer: aws_iam
+    environment:
+      restaurants_table: restaurants
+
+resources:
+  Resources:
+    restaurantsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: restaurants
+        AttributeDefinitions:
+          - AttributeName: name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: name
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
