@@ -4,12 +4,17 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "integration-test": "./node_modules/.bin/mocha tests/test_cases --reporter spec"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "aws-sdk": "^2.523.0"
+    "aws-sdk": "^2.523.0",
+    "chai": "^4.2.0",
+    "lodash": "^4.17.15",
+    "mocha": "^6.2.0",
+    "serverless": "^1.52.0",
+    "serverless-sam": "^0.2.0"
   },
   "dependencies": {
     "aws4": "^1.8.0",

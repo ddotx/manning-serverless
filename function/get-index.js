@@ -6,6 +6,10 @@ const http = require('superagent-promise')(require('superagent'),Promise)
 const aws4 = require('aws4')
 const URL = require('url')
 
+const awsRegion = process.env.AWS_REGION
+const cognitoUserPoolId = process.env.cognito_user_pool_id
+const cognitoClientId = process.env.cognito_client_id;
+
 const restaurantsApiRoot = process.env.restaurants_api
 const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
@@ -18,28 +22,50 @@ async function loadHtml(){
   return html
 }
 
-async function getRestaurants(){
-  let url = URL.parse(restaurantsApiRoot)
+async function getRestaurants() {
+  let url = URL.parse(restaurantsApiRoot);
   let opts = {
     host: url.hostname,
     path: url.pathname
-  }
-  aws4.sign(opts)
+  };
+  aws4.sign(opts);
 
-  return (await http
+  let httpReg = http
     .get(restaurantsApiRoot)
     .set('Host', opts.headers['Host'])
     .set('X-Amz-Date', opts.headers['X-Amz-Date'])
     .set('Authorization', opts.headers['Authorization'])
-    .set('X-Amz-Security-Token', opts.headers['X-Amz-Security-Token'])
-    ).body
+
+  if (opts.headers["X-Amz-Security-Token"]) {
+    httpReg.set("X-Amz-Security-Token", opts.headers["X-Amz-Security-Token"]);
+  }
+  return (await httpReg).body;
+  // return (await http
+  //   .get(restaurantsApiRoot)
+  //   .set('Host', opts.headers['Host'])
+  //   .set('X-Amz-Date', opts.headers['X-Amz-Date'])
+  //   .set('Authorization', opts.headers['Authorization'])
+  //   .set('X-Amz-Security-Token', opts.headers['X-Amz-Security-Token'])
+  //   ).body
 }
 
 module.exports.handler = async event => {
   let template = await loadHtml()
   let restaurants = await getRestaurants()
   let dayOfWeek = days[new Date().getDate()]
-  let html = Mustache.render(template, { dayOfWeek, restaurants })
+  
+  //*--For Securing API endpoints
+  let view = {
+    dayOfWeek,
+    restaurants,
+    awsRegion,
+    cognitoUserPoolId,
+    cognitoClientId,
+    searchUrl: `${restaurantsApiRoot}/search`
+  }
+
+  // let html = Mustache.render(template, { dayOfWeek, restaurants })
+  let html = Mustache.render(template, view)
 
   return {
     statusCode: 200,

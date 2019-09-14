@@ -2,6 +2,7 @@ service: sls-big-mouth
 
 plugins:
   - serverless-pseudo-parameters
+  - serverless-sam
 
 provider:
   name: aws
@@ -23,6 +24,8 @@ functions:
           method: get
     environment:
       restaurants_api: https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/restaurants
+      cognito_user_pool_id: us-east-1_GI9ArWcfe
+      cognito_client_id: 545tu4jut4nv12um82ge9artf5
   get-restaurants:
     handler: function/get-restaurants.handler
     events:
@@ -30,6 +33,16 @@ functions:
           path: /restaurants/
           method: get
           authorizer: aws_iam
+    environment:
+      restaurants_table: restaurants
+  search-restaurants:
+    handler: function/search-restaurants.handler
+    events:
+      - http:
+          path: /restaurants/search
+          method: post
+          authorizer:
+            arn: arn:aws:cognito-idp:us-east-1:524296608096:userpool/us-east-1_GI9ArWcfe
     environment:
       restaurants_table: restaurants
 
