@@ -17,6 +17,9 @@ provider:
     - Effect: Allow
       Action: kinesis:PutRecord
       Resource: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+    - Effect: Allow
+      Action: sns:Publish
+      Resource: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-notification
 
 functions:
   get-index:
@@ -59,7 +62,14 @@ functions:
             arn: arn:aws:cognito-idp:#{AWS::Region}:#{AWS::AccountId}:userpool/us-east-1_GI9ArWcfe
     environment:
       order_events_stream: order-events
-
+  notify-restaurant:
+    handler: function/notify-restaurant.handler
+    events:
+      - stream:
+          arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+    environment:
+    order_events_stream: order_events
+    restaurant_notification_topic: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-notification
 resources:
   Resources:
     restaurantsTable:
@@ -81,3 +91,9 @@ resources:
       Properties:
         Name: order-events
         ShardCount: 1
+
+    restaurantNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: restaurant-notification
+        TopicName: restaurant-notification
