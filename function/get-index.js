@@ -11,9 +11,11 @@ const cognitoUserPoolId = process.env.cognito_user_pool_id
 const cognitoClientId = process.env.cognito_client_id;
 
 const restaurantsApiRoot = process.env.restaurants_api
+const ordersApiRoot = process.env.orders_api
+
 const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
-var html;
+var html; //* Cached static by global variables
 
 async function loadHtml(){
   if (!html) {
@@ -21,6 +23,8 @@ async function loadHtml(){
   }
   return html
 }
+//!=== Take advantage of container reuse to avoid loading static content,
+//! or creating DB connection pools on every invocation
 
 async function getRestaurants() {
   let url = URL.parse(restaurantsApiRoot);
@@ -61,7 +65,8 @@ module.exports.handler = async event => {
     awsRegion,
     cognitoUserPoolId,
     cognitoClientId,
-    searchUrl: `${restaurantsApiRoot}/search`
+    searchUrl: `${restaurantsApiRoot}/search`,
+    placeOrderUrl: `${ordersApiRoot}`
   }
 
   // let html = Mustache.render(template, { dayOfWeek, restaurants })

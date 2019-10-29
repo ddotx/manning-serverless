@@ -15,6 +15,11 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+  orderEventsStream:
+    Type: 'AWS::Kinesis::Stream'
+    Properties:
+      Name: order-events
+      ShardCount: 1
   SlsBigMouthDevGetIndex:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -34,10 +39,15 @@ Resources:
               Action: 'execute-api:Invoke'
               Resource: >-
                 arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+            - Effect: Allow
+              Action: 'kinesis:PutRecord'
+              Resource: >-
+                arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
       Environment:
         Variables:
           restaurants_api: >-
             https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/restaurants
+          orders_api: 'https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/orders'
           cognito_user_pool_id: us-east-1_GI9ArWcfe
           cognito_client_id: 545tu4jut4nv12um82ge9artf5
       Events:
@@ -87,6 +97,15 @@ Resources:
                   'Fn::Sub': >-
                     arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlsBigMouthDevSearchRestaurants.Arn}/invocations
               responses: {}
+          /orders:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  'Fn::Sub': >-
+                    arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlsBigMouthDevPlaceOrder.Arn}/invocations
+              responses: {}
         securityDefinitions:
           Aws_iam:
             type: apiKey
@@ -128,6 +147,10 @@ Resources:
               Action: 'execute-api:Invoke'
               Resource: >-
                 arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+            - Effect: Allow
+              Action: 'kinesis:PutRecord'
+              Resource: >-
+                arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
       Environment:
         Variables:
           restaurants_table: restaurants
@@ -178,6 +201,10 @@ Resources:
               Action: 'execute-api:Invoke'
               Resource: >-
                 arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+            - Effect: Allow
+              Action: 'kinesis:PutRecord'
+              Resource: >-
+                arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
       Environment:
         Variables:
           restaurants_table: restaurants
@@ -197,4 +224,47 @@ Resources:
       Action: 'lambda:InvokeFunction'
       FunctionName:
         Ref: SlsBigMouthDevSearchRestaurants
+      Principal: apigateway.amazonaws.com
+  SlsBigMouthDevPlaceOrder:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: function/place-order.handler
+      Runtime: nodejs10.x
+      CodeUri: /Users/domemini/Desktop/manning-serverless/.serverless/sls-big-mouth.zip
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 'dynamodb:scan'
+              Resource: >-
+                arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/restaurants
+            - Effect: Allow
+              Action: 'execute-api:Invoke'
+              Resource: >-
+                arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+            - Effect: Allow
+              Action: 'kinesis:PutRecord'
+              Resource: >-
+                arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+      Environment:
+        Variables:
+          order_events_stream: order-events
+      Events:
+        Event1:
+          Type: Api
+          Properties:
+            Path: /orders
+            Method: post
+            RestApiId:
+              Ref: SlsBigMouth
+  SlsBigMouthDevPlaceOrderLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    DependsOn:
+      - SlsBigMouthDevPlaceOrder
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        Ref: SlsBigMouthDevPlaceOrder
       Principal: apigateway.amazonaws.com

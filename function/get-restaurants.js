@@ -11,9 +11,12 @@ async function getRestaurants(count) {
     TableName: tableName,
     Limit: count
   };
+  //FIXME: REAL-WORLD === return the personalized list of top restaurants
+// for each user based on location, rating, and order history
   let resp = await dynamodb.scan(req).promise();
   return resp.Items;
 }
+
 
 module.exports.handler = async event => {
   let restaurants = await getRestaurants(defaultResults);
