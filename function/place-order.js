@@ -9,6 +9,7 @@ module.exports.handler = async event => {
 
   let userEmail = event.requestContext.authorizer.claims.email
 
+  //FIXME: Dev - Generate a new order id 
   let orderId = chance.guid()
   console.log(`placing order ID [${orderId}] to [${restaurantName}] from user [${userEmail}]`)
 
@@ -20,7 +21,7 @@ module.exports.handler = async event => {
   }
 
   let putReq = {
-    Data: JSON.stringify(data),
+    Data: JSON.stringify(data), //? SDK will automatically base64 encode the data
     PartitionKey: orderId,
     StreamName: streamName
   }

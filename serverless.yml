@@ -19,7 +19,7 @@ provider:
       Resource: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
     - Effect: Allow
       Action: sns:Publish
-      Resource: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-notification
+      Resource: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-sns-notification
 
 functions:
   get-index:
@@ -52,6 +52,7 @@ functions:
             arn: arn:aws:cognito-idp:#{AWS::Region}:#{AWS::AccountId}:userpool/us-east-1_GI9ArWcfe
     environment:
       restaurants_table: restaurants
+
   place-order:
     handler: function/place-order.handler
     events:
@@ -69,8 +70,8 @@ functions:
       - stream:
           arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
     environment:
-    order_events_stream: order_events
-    restaurant_notification_topic: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-notification
+      order_events_stream: order-events
+      restaurant_notification_topic: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-sns-notification
 
   accept-order:
     handler: function/accept-order.handler
@@ -106,5 +107,5 @@ resources:
     restaurantNotificationTopic:
       Type: AWS::SNS::Topic
       Properties:
-        DisplayName: restaurant-notification
-        TopicName: restaurant-notification
+        DisplayName: restaurant-sns-notification
+        TopicName: restaurant-sns-notification

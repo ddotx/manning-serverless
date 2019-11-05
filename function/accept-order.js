@@ -2,13 +2,20 @@
 
 const AWS = require("aws-sdk");
 const kinesis = new AWS.Kinesis();
+
 const streamName = process.env.order_events_stream;
 
 module.exports.handler = async event => {
+  //TODO: Match POST Body
   let body = JSON.parse(event.body);
   let restaurantName = body.restaurantName;
   let orderId = body.orderId;
   let userEmail = body.userEmail;
+
+  //FIXME:
+  //! Implement authen for the accept-order
+  //* Create a separate User Pool for restaurant users
+  //* Authen the accept order endpoint
 
   console.log(
     `restaurant [${restaurantName}] accepted order ID [${orderId}] from user [${userEmail}]`

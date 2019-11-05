@@ -3,6 +3,7 @@ const kinesis = new AWS.Kinesis();
 const sns = new AWS.SNS();
 const _ = require('lodash')
 
+//TODO: === Kinesis data blob is base64 encoded, need to decode
 const getRecords = require('../lib/kinesis').getRecords
 
 const streamName = process.env.order_events_stream;
