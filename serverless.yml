@@ -1,4 +1,6 @@
-service: sls-big-mouth
+#org: ddotx
+#app: manning
+service: yan-big-mouth # *cf => yan-big-mouth-dev
 
 plugins:
   - serverless-pseudo-parameters
@@ -6,88 +8,61 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
+  stage: dev
+  region: ap-southeast-2
   iamRoleStatements:
     - Effect: Allow
       Action: dynamodb:scan
-      Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/restaurants
+      Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/yan-restaurants
     - Effect: Allow
       Action: execute-api:Invoke
       Resource: arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
-    - Effect: Allow
-      Action: kinesis:PutRecord
-      Resource: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
-    - Effect: Allow
-      Action: sns:Publish
-      Resource: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-sns-notification
+    #- Effect: Allow
+    #  Action: kinesis:PutRecord
+    #  Resource: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+    #- Effect: Allow
+    #  Action: sns:Publish
+    #  Resource: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-sns-notification
 
 functions:
-  get-index:
-    handler: function/get-index.handler
+  get-index: # *cf => yan-big-mouth-dev-get-index
+    handler: functions/get-index.handler
     events:
       - http:
           path: /
           method: get
     environment:
-      restaurants_api: https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/restaurants
-      orders_api: https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/orders
-      cognito_user_pool_id: us-east-1_GI9ArWcfe
-      cognito_client_id: 545tu4jut4nv12um82ge9artf5
+      restaurants_api: https://g9m22s29wj.execute-api.ap-southeast-2.amazonaws.com/dev/restaurants
+    #  orders_api: https://fkzm0on235.execute-api.us-east-1.amazonaws.com/dev/orders
+      cognito_user_pool_id: ap-southeast-2_5co2xTZoS
+      cognito_client_id: 7727o68jbckbm8ujagk1snd46e
   get-restaurants:
-    handler: function/get-restaurants.handler
+    handler: functions/get-restaurants.handler # *cf => yan-big-mouth-dev-get-restaurants
     events:
       - http:
           path: /restaurants/
           method: get
           authorizer: aws_iam
     environment:
-      restaurants_table: restaurants
+      restaurants_table: yan-restaurants
   search-restaurants:
-    handler: function/search-restaurants.handler
+    handler: functions/search-restaurants.handler
     events:
       - http:
           path: /restaurants/search
           method: post
           authorizer:
-            arn: arn:aws:cognito-idp:#{AWS::Region}:#{AWS::AccountId}:userpool/us-east-1_GI9ArWcfe
+            arn: arn:aws:cognito-idp:#{AWS::Region}:#{AWS::AccountId}:userpool/ap-southeast-2_5co2xTZoS
     environment:
-      restaurants_table: restaurants
-
-  place-order:
-    handler: function/place-order.handler
-    events:
-      - http:
-          path: /orders
-          method: post
-          authorizer:
-            arn: arn:aws:cognito-idp:#{AWS::Region}:#{AWS::AccountId}:userpool/us-east-1_GI9ArWcfe
-    environment:
-      order_events_stream: order-events
-  
-  notify-restaurant:
-    handler: function/notify-restaurant.handler
-    events:
-      - stream:
-          arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
-    environment:
-      order_events_stream: order-events
-      restaurant_notification_topic: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:restaurant-sns-notification
-
-  accept-order:
-    handler: function/accept-order.handler
-    events:
-      - http:
-          path: /orders/accept
-          method: post
-    environment:
-      order_events_stream: order-events
+      restaurants_table: yan-restaurants
 
 resources:
   Resources:
     restaurantsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: restaurants
+        TableName: yan-restaurants
         AttributeDefinitions:
           - AttributeName: name
             AttributeType: S
@@ -98,14 +73,14 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
 
-    orderEventsStream:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        Name: order-events
-        ShardCount: 1
+    #orderEventsStream:
+    #  Type: AWS::Kinesis::Stream
+    #  Properties:
+    #    Name: order-events
+    #    ShardCount: 1
 
-    restaurantNotificationTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        DisplayName: restaurant-sns-notification
-        TopicName: restaurant-sns-notification
+    #restaurantNotificationTopic:
+    #  Type: AWS::SNS::Topic
+    #  Properties:
+    #    DisplayName: restaurant-sns-notification
+    #    TopicName: restaurant-sns-notification

@@ -1,7 +1,7 @@
 "use strict";
 
 const AWS = require("aws-sdk");
-AWS.config.region = "us-east-1";
+AWS.config.region = "ap-southeast-2";
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 let restaurants = [
@@ -56,7 +56,7 @@ let putReqs = restaurants.map(x => ({
 
 let req = {
   RequestItems: {
-    restaurants: putReqs
+    'yan-restaurants': putReqs
   }
 };
 dynamodb

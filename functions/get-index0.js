@@ -72,6 +72,7 @@ module.exports.handler = async event => {
   // let html = Mustache.render(template, { dayOfWeek, restaurants })
   let html = Mustache.render(template, view)
 
+  // default will return as json, so overwrite with new header
   return {
     statusCode: 200,
     body: html,
