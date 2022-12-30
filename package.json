@@ -11,8 +11,8 @@
   "devDependencies": {
     "aws-sdk": "^2.523.0",
     "chai": "^4.2.0",
-    "mocha": "^6.2.0",
-    "serverless": "^1.52.0",
+    "mocha": "^10.2.0",
+    "serverless": "^1.83.3",
     "serverless-pseudo-parameters": "^2.5.0",
     "serverless-sam": "^0.2.0"
   },
